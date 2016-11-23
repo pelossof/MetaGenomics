@@ -266,17 +266,17 @@ deseq2 <- function (ct, factors) {
 	return (list(res = res, dds = dds))
 }
 
-deseq2plots = function (ct, ix, study, col.null, col.test, name.null, name.test, volcano.signatures = list(), v ,...) {
-	factors.all <- factor( ix, levels = c(TRUE, FALSE), labels = c('null', 'test') )
+deseq2plots = function (ct, is.null, study, col.null, col.test, name.null, name.test, volcano.signatures = list(), v ,...) {
+	factors.all <- factor( is.null, levels = c(TRUE, FALSE), labels = c('null', 'test') )
 	ds.test <- deseq2(round(ct), factors.all)
 	ds.test$res = res2gene(ds.test$res)
 	plotDEseq2Results(ds.test$dds, ds.test$res, ver.path(sprintf('%s_rnaseq_dispersion.pdf', study),v))
 	write.csv(ds.test$res, ver.path(sprintf('%s_de.csv', study), v))
 	pdf(ver.path(sprintf('%s_pca_volcano.pdf',study), v))
-	pca.plot(log2(1+ct), col = ifelse(ix, col.null, col.test), pch = 19, ann.cex = 0.5)
+	pca.plot(log2(1+ct), col = ifelse(is.null, col.null, col.test), pch = 19, ann.cex = 0.5)
 	legend('topleft', c(name.test, name.null), col = c(col.test, col.null), pch = 19)
 	for(vol.sig in names(volcano.signatures)) {
-		volcano.plot(ds.test$res, volcano.signatures[[vol.sig]], main = sprintf('%s, %s', study, vol.sig), ...)
+		volcano.plot(ds.test$res, volcano.signatures[[vol.sig]], main = sprintf('%s, %s', study, vol.sig), ylim = c(0, max(-log10(ds.test$res$padj + 1e-100), na.rm = T)), ...)
 		legend('top', sprintf('<-- %s high | %s high -->', name.null, name.test))
 	}
 	dev.off()
