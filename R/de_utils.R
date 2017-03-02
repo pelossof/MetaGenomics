@@ -254,11 +254,11 @@ oncoprinter = function(dat, tags = NA, filename = 'oncoprinter.txt') {
 ##
 ##  DEseq2 code
 ##
-deseq2 <- function (ct, factors) {
+deseq2 <- function (ct, factors,...) {
 	colData <- data.frame(condition=factors, row.names=colnames(ct))
 	dds <- DESeqDataSetFromMatrix (countData = ct, colData = colData, design = ~ condition)
 	colData(dds)$condition <- factor(colData(dds)$condition, levels = levels(factors))
-	dds <- DESeq(dds)
+	dds <- DESeq(dds,...)
 	res <- results(dds)
 	o <- order(res$padj)
 	res <- res[o,]
@@ -266,7 +266,11 @@ deseq2 <- function (ct, factors) {
 	return (list(res = res, dds = dds))
 }
 
-deseq2plots = function (ct, is.null, study, col.null, col.test, name.null, name.test, volcano.signatures = list(), v ,...) {
+deseq2plots2 = function (ct, is.test, study, col.null, col.test, name.null, name.test, volcano.signatures = list(), v , run_gsea = F, basemean.min = 50, ...) {
+	return (deseq2plots(ct, !is.test, study, col.null, col.test, name.null, name.test, volcano.signatures, v , run_gsea, basemean.min, ...))
+}
+
+deseq2plots = function (ct, is.null, study, col.null, col.test, name.null, name.test, volcano.signatures = list(), v , run_gsea = F, basemean.min = 50, ...) {
 	factors.all <- factor( is.null, levels = c(TRUE, FALSE), labels = c('null', 'test') )
 	ds.test <- deseq2(round(ct), factors.all)
 	ds.test$res = res2gene(ds.test$res)
@@ -280,6 +284,12 @@ deseq2plots = function (ct, is.null, study, col.null, col.test, name.null, name.
 		legend('top', sprintf('<-- %s high | %s high -->', name.null, name.test))
 	}
 	dev.off()
+	if (run_gsea) {		
+		filename.rnk = ver.path(sprintf('%s.rnk', study), v)
+		write.gsea.de(subset(ds.test$res, baseMean > basemean.min), filename.rnk, lfc = 'log2FoldChange', padj = 'padj')
+		run.gsea.all(filename.rnk)
+		run.gsea(filename.rnk, sig.fname = paths.data('gsea/signatures/sig_stroma_20160914.gmt'), out.path = gsub('.rnk','', filename.rnk, fixed = T), analysis.name = 'sig_stroma')
+	}
 	return (ds.test)
 }
 
