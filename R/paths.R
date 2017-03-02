@@ -9,7 +9,7 @@ utils.path <- Sys.getenv('utils_path')
 project.path <- data.path
 
 paths.processed <- function(filename='') {
-	processed.path <- paste(project.path, '/processed', sep='')
+	processed.path <- paste(project.path, 'processed', sep='/')
 	return ( paste (processed.path, filename, sep='/'))
 }
 
@@ -21,8 +21,14 @@ paths.utils <- function(filename='') {
 	return ( paste(utils.path, filename, sep='/'))
 }
 
+source.util <- function (lib) {
+	source(paths.utils(sprintf('%s_utils.R', lib)))
+}
+
 pdfdat <- function(filename) {
 	time.stamp <- format(Sys.time(), "%y%d%m-%H%M.pdf")
 	pdfdatname <- paste(sub("^([^.]*).*", "\\1", filename), time.stamp, sep='_')
 	pdf(pdfdatname)
 }
+
+
